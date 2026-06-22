@@ -1,4 +1,4 @@
-name: Build Android APK (Absolute Nuclear Mode)
+name: Build Android APK (Headless Fix)
 
 on:
   push:
@@ -21,28 +21,24 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Force Disable KSP and Assemble APK
+    - name: Build APK (Fix Headless Error)
       run: |
-        # ค้นหาว่าโปรเจกต์อยู่ที่ไหนแล้วกระโดดเข้าไป
         ROOT_DIR=$(find . -name "settings.gradle" -o -name "settings.gradle.kts" | head -n 1 | xargs dirname)
         cd "$ROOT_DIR"
         
-        # ปิดการทำงานของปลั๊กอินความปลอดภัยและปลั๊กอินที่ทำให้ระบบระเบิดผ่าน Properties
-        # สั่งให้บิวด์ผ่านโดยมองข้าม Error ของ KSP และ Lint ทั้งหมด
+        # ฉีดยาแก้ช็อค บังคับ Java ให้ทำงานแบบ "ไร้หน้าจอ" (Headless Mode)
+        export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+        
+        # สั่ง Build อีกครั้ง พร้อมย้ำว่าไม่ต้องใช้หน้าจอ
         gradle assembleDebug \
+          --no-daemon \
+          -Djava.awt.headless=true \
+          -Dorg.gradle.jvmargs="-Djava.awt.headless=true" \
           -x test \
-          -x lint \
-          -x lintVitalRelease \
-          -Pksp.allow.all.version.mismatch=true \
-          -Dksp.incremental=false \
-          -Dandroid.injected.signing.store.file= \
-          -Dandroid.injected.signing.store.password= \
-          -Dandroid.injected.signing.key.alias= \
-          -Dandroid.injected.signing.key.password= \
-          --continue || true
+          -x lint
 
-    - name: Scan and Upload Any APK Found
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: my-app-debug-successful
+        name: my-app-debug
         path: "**/build/outputs/apk/debug/*.apk"
