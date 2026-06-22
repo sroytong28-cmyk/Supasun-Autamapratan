@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.ui.NongLuApp
 import com.example.ui.theme.MyApplicationTheme
+import com.google.ai.client.generativeai.GenerativeModel
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
