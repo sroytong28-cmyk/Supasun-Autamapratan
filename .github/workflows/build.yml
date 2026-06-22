@@ -2,43 +2,56 @@ name: Build Android APK (Headless Fix)
 
 on:
   push:
-    branches: [ "หลัก", "main" ]
+    branches:
+      - main
+      - หลัก
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      JAVA_TOOL_OPTIONS: -Djava.awt.headless=true
+      GRADLE_OPTS: -Djava.awt.headless=true
+
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      - name: Find Android Project
+        id: project
+        run: |
+          ROOT_DIR=$(dirname "$(find . \( -name settings.gradle -o -name settings.gradle.kts \) | head -n 1)")
+          echo "ROOT_DIR=$ROOT_DIR" >> $GITHUB_ENV
 
-    - name: Build APK (Fix Headless Error)
-      run: |
-        ROOT_DIR=$(find . -name "settings.gradle" -o -name "settings.gradle.kts" | head -n 1 | xargs dirname)
-        cd "$ROOT_DIR"
-        
-        # ฉีดยาแก้ช็อค บังคับ Java ให้ทำงานแบบ "ไร้หน้าจอ" (Headless Mode)
-        export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
-        
-        # สั่ง Build อีกครั้ง พร้อมย้ำว่าไม่ต้องใช้หน้าจอ
-        gradle assembleDebug \
-          --no-daemon \
-          -Djava.awt.headless=true \
-          -Dorg.gradle.jvmargs="-Djava.awt.headless=true" \
-          -x test \
-          -x lint
+      - name: Grant execute permission
+        run: |
+          cd "$ROOT_DIR"
+          chmod +x gradlew || true
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: my-app-debug
-        path: "**/build/outputs/apk/debug/*.apk"
+      - name: Build APK (Headless)
+        run: |
+          cd "$ROOT_DIR"
+
+          ./gradlew assembleDebug \
+            --no-daemon \
+            --stacktrace \
+            --info \
+            -Djava.awt.headless=true \
+            -x test \
+            -x lint
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-app-debug
+          path: |
+            **/build/outputs/apk/debug/*.apk
