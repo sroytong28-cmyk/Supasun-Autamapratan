@@ -1,0 +1,6 @@
+{
+  "name": "NongLu Stay",
+  "description": "แนะนำที่พักและท่องเที่ยวตำบลหนองลู อ.สังขละบุรี (สะพานมอญ & สามประสบ)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
