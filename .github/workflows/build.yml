@@ -1,4 +1,4 @@
-name: Build Android APK (Headless Fix)
+name: Build Android APK
 
 on:
   push:
@@ -11,10 +11,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      JAVA_TOOL_OPTIONS: -Djava.awt.headless=true
-      GRADLE_OPTS: -Djava.awt.headless=true
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,32 +22,21 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - name: Find Android Project
-        id: project
-        run: |
-          ROOT_DIR=$(dirname "$(find . \( -name settings.gradle -o -name settings.gradle.kts \) | head -n 1)")
-          echo "ROOT_DIR=$ROOT_DIR" >> $GITHUB_ENV
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
 
-      - name: Grant execute permission
+      - name: Build with Gradle
         run: |
-          cd "$ROOT_DIR"
-          chmod +x gradlew || true
-
-      - name: Build APK (Headless)
-        run: |
-          cd "$ROOT_DIR"
-
           ./gradlew assembleDebug \
             --no-daemon \
             --stacktrace \
-            --info \
             -Djava.awt.headless=true \
-            -x test \
-            -x lint
+            -x test
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: my-app-debug
-          path: |
-            **/build/outputs/apk/debug/*.apk
+          name: android-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30
