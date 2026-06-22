@@ -21,10 +21,9 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    # เพิ่มขั้นตอนเคลียร์แคชและปรับตั้งค่าให้ Build โดยไม่สนการลงชื่อ
-    - name: Build Debug APK (Force)
-      run: |
-        ./gradlew assembleDebug -x test -x lint -x kspDebugKotlin -Dandroid.injected.signing.store.file= -Dandroid.injected.signing.key.alias= -Dandroid.injected.signing.key.password= -Dandroid.injected.signing.store.password=
+    - name: Build Debug APK (Force System Gradle)
+      # ใช้คำสั่ง 'gradle' ตัวหลักของเซิร์ฟเวอร์ โดยไม่ต้องพึ่งไฟล์ gradlew ในโปรเจกต์ และข้ามส่วนที่พังทั้งหมด
+      run: gradle assembleDebug -x test -x lint -x kspDebugKotlin -Dandroid.injected.signing.store.file= -Dandroid.injected.signing.key.alias= -Dandroid.injected.signing.key.password= -Dandroid.injected.signing.store.password=
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
